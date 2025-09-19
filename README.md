@@ -1,9 +1,10 @@
 # 📋 Automatització de pujada de fitxers per Formularis de Google
 
-Aquest projecte conté un automatizació que permet processar respostes de **Formularis de Google** on s’hi adjunten arxius. Aquesta automatització:
+Aquest projecte conté una automatització que permet processar respostes de **Formularis de Google** on s’hi adjunten arxius. Aquesta automatització:
 
 - Desa els fitxers enviats dins la carpeta del Formulari.
 - Crea subcarpetes per cada **grup** (`Unitat/Grup`).
+- Dins de cada grup, crea una subcarpeta amb el nom complet del participant, i desa tots els fitxers en aquesta carpeta.
 - Reanomena els arxius amb el nom, primer llinatge i segon llinatge del participant.
 - Evita feina manual i errors humans.
 
@@ -14,12 +15,43 @@ Podeu trobar un exemple de formulari en aquesta [carpeta de Google Drive](https:
 - `form-utils.js` → Fitxer principal amb la lògica compartida (**no l’heu de modificar**).
 - `loader-sample.js` → Exemple de codi mínim que cada Formulari ha de tenir, amb la configuració específica.
 
-## 🚀 Com configurar un Formulari nou
+## 🚀 Com configurar un Formulari nou copiant un existent
+
+La manera més senzilla i recomanada de procedir és **fer una còpia d’un formulari existent** a Google Drive, especialment si la vostra organització utilitza la mateixa estructura per a més d’un agrupament.
+
+**Passos recomanats:**
+
+1. Aneu a Google Drive i localitzeu el formulari existent que ja funciona amb aquest sistema.
+2. Feu clic dret sobre el formulari original i seleccioneu **"Fer una còpia"**.
+3. Obriu la còpia resultant i aneu al menú **Apps Script**.
+4. Reviseu que els títols de les preguntes del formulari coincideixin exactament amb el que apareix a la configuració (`config`) del script.
+   Exemple:
+
+   ```javascript
+   const config = {
+     nameFields: {
+       firstName: 'Nom del nin, nina o jove',
+       firstSurname: 'Primer llinatge del nin, nina o jove',
+       secondSurname: 'Segon llinatge del nin, nina o jove'
+     },
+     groupField: 'Unitat',
+     fileFields: [
+       'Autorització signada',
+       'DNI',
+       'Fotografia',
+       'Targeta sanitària',
+       'Llibre de vacunes'
+     ]
+   };
+   ```
+
+5. Des del menú d’Apps Script **seleccioneu i executeu la funció `installTriggerForThisForm`** per assegurar-vos que el trigger de processament està activat (els triggers NO es copien automàticament amb el formulari).
+6. El formulari ja està llest per utilitzar-se i aplicarà automàticament tota la lògica centralitzada.
 
 
-La manera més sencilla de procedir és copiar un formulari existent, però per configurar un formulari nou s'han de seguir els següents passos.
+## 🚀 Com configurar un Formulari nou des de zero
 
-**Consell:** Si la vostra organització té diversos agrupaments que utilitzen la mateixa estructura, podeu fer servir “Fer una còpia” del formulari original a Google Drive i després modificar només la configuració (`config`) i les preguntes necessàries.
+Per crear un formulari totalment nou i preparar-lo per a la gestió automàtica d’arxius, segueix aquests passos:
 
 1. Obriu el vostre **Formulari de Google**.
 2. Aneu a **Extensions → Apps Script**.
@@ -31,7 +63,7 @@ La manera més sencilla de procedir és copiar un formulari existent, però per 
      nameFields: {
        firstName: 'Nom del nin, nina o jove',
        firstSurname: 'Primer llinatge del nin, nina o jove',
-       secondSurname: 'Segon llinatge'
+       secondSurname: 'Segon llinatge del nin, nina o jove'
      },
      groupField: 'Unitat',
      fileFields: [
@@ -58,7 +90,6 @@ La manera més sencilla de procedir és copiar un formulari existent, però per 
       ```
     - Deseu el fitxer.
 
-
 6. Deseu els canvis al projecte general.
 7. Executeu manualment la funció **`installTriggerForThisForm`**:
    - A la barra superior, seleccioneu la funció.
@@ -66,15 +97,8 @@ La manera més sencilla de procedir és copiar un formulari existent, però per 
    - Google us demanarà permisos → accepteu **tots els permisos sol·licitats**.
 
 8. El formulari ja està configurat ✅. Cada vegada que un usuari enviï respostes amb arxius:
-   - Es crearan subcarpetes pel camp *Unitat/Group*.
-   - Els fitxers quedaran reanomenats i ben organitzats.
-
-
-
-
-
-
-
+   - Es crearan subcarpetes pel camp *Unitat/Grup*.
+   - Dins de cada grup, es crearà una subcarpeta pel participant, i els fitxers quedaran reanomenats i organitzats dins aquesta carpeta.
 
 ## 🛠 Exemple d’ús
 
@@ -84,8 +108,6 @@ Respostes:
 - **Segon llinatge:** Llull
 - **Unitat:** Ferrerets
 
-
-
 Fitxers pujats:
 - *DNI.pdf*
 - *DNI_2.pdf*
@@ -93,9 +115,9 @@ Fitxers pujats:
 Resultat:
 
 ```
-Ferrerets/DNI - Maria Garcia Llull 1.pdf
-Ferrerets/DNI - Maria Garcia Llull 2.pdf
-Ferrerets/Autorització - Maria Garcia Llull 1.pdf
+Ferrerets/Maria Garcia Llull/DNI - Maria Garcia Llull 1.pdf
+Ferrerets/Maria Garcia Llull/DNI - Maria Garcia Llull 2.pdf
+Ferrerets/Maria Garcia Llull/Autorització - Maria Garcia Llull 1.pdf
 ```
 Cada fitxer pujat (encara que sigui al mateix camp de pujada, per exemple múltiples fitxers de DNI), rebrà un número correlatiu.
 

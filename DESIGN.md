@@ -40,9 +40,16 @@ Aquest document descriu l’arquitectura, les decisions de disseny i el flux de 
 4. El motor comú:
    - Llegeix els camps configurats (`Nom`, `Primer llinatge`, `Segon llinatge`, `Grup`).
    - Crea o localitza la subcarpeta de grup dins de la carpeta del formulari.
+   - Dins la carpeta de grup, crea o localitza una subcarpeta amb el nom complet del participant
+     (ex. `Ferrerets/Maria Garcia Llull/`).
    - Mou i reanomena els fitxers segons l’esquema:
      ```
-     <Camp-de-fitxer> - <Nom> <Primer Llinatge> <Segon Llinatge> <N>.<extensió>
+     <Unitat>/<Nom> <Primer Llinatge> <Segon Llinatge>/<Camp-de-fitxer> - <Nom> <Primer Llinatge> <Segon Llinatge> <N>.<extensió>
+     ```
+   - Exemple pràctic:
+     ```
+     Ferrerets/Maria Garcia Llull/DNI - Maria Garcia Llull 1.pdf
+     Ferrerets/Maria Garcia Llull/Autorització - Maria Garcia Llull 1.pdf
      ```
 
 ---

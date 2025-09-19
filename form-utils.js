@@ -23,9 +23,9 @@ function handleFormSubmit(e, config) {
 
   // Get or create the target folder for the group
   let groupFolder;
-  const folders = formFolder.getFoldersByName(group);
-  if (folders.hasNext()) {
-    groupFolder = folders.next();
+  const groupFolders = formFolder.getFoldersByName(group);
+  if (groupFolders.hasNext()) {
+    groupFolder = groupFolders.next();
     console.info(`INFO: Found existing folder for group: ${group}`);
   } else {
     try {
@@ -37,12 +37,29 @@ function handleFormSubmit(e, config) {
     }
   }
 
+  // Get or create the target folder for the person inside the group
+  const personFolderName = `${name} ${firstSurname} ${secondSurname}`.replace(/\s{2,}/g, ' ').trim();
+  let personFolder;
+  const personFolders = groupFolder.getFoldersByName(personFolderName);
+  if (personFolders.hasNext()) {
+    personFolder = personFolders.next();
+    console.info(`INFO: Found existing folder for person: ${personFolderName}`);
+  } else {
+    try {
+      personFolder = groupFolder.createFolder(personFolderName);
+      console.info(`INFO: Created new folder for person: ${personFolderName}`);
+    } catch (error) {
+      console.error(`ERROR: Failed to create folder "${personFolderName}". Error: ${error.message}`);
+      return;
+    }
+  }
+
   // Process each configured file field
   config.fileFields.forEach(field => {
     const itemResponse = getResponseByTitle(responses, field);
     if (itemResponse) {
-      processResponseFiles(itemResponse, groupFolder, name, firstSurname, secondSurname);
-    } else {
+      processResponseFiles(itemResponse, personFolder, name, firstSurname, secondSurname);
+  } else {
       console.info(`INFO: File field "${field}" not found in the form response.`);
     }
   });
@@ -57,8 +74,9 @@ function getResponseByTitle(responses, title) {
 
 /**
  * Process and rename uploaded files.
+ * Files are moved into the participant's folder inside the group.
  */
-function processResponseFiles(itemResponse, groupFolder, name, firstSurname, secondSurname) {
+function processResponseFiles(itemResponse, personFolder, name, firstSurname, secondSurname) {
   const response = itemResponse.getResponse();
   const responseTitle = itemResponse.getItem().getTitle();
 
@@ -75,7 +93,7 @@ function processResponseFiles(itemResponse, groupFolder, name, firstSurname, sec
         console.info(`INFO: Processing file from "${responseTitle}" response, ID: ${file.getId()}, URL: ${file.getUrl()}`);
 
         // Move + rename
-        file.moveTo(groupFolder).setName(newName);
+        file.moveTo(personFolder).setName(newName);
 
         // Log success with full path
         const filePath = getFilePath(file);
