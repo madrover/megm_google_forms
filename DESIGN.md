@@ -19,14 +19,20 @@ Aquest document descriu l’arquitectura, les decisions de disseny i el flux de 
 ## 🔹 Components Principals
 
 1. **Motor compartit (`form-utils.js`)**
-   - `handleFormSubmit(e, config)` → Processa les respostes segons la configuració de cada formulari.
-   - Funcions utilitàries (`getResponseByTitle`, `processResponseFiles`, `getFilePath`…).
-   - `installTrigger()` → Instal·la de manera idempotent el trigger *onFormSubmit* per garantir que només existeix un cop.
+   - `handleFormSubmit(e, config)` → Amb event (trigger), processa la resposta enviada; sense event (execució manual), crida `processAllResponses()`.
+   - `processAllResponses(config)` → Processa totes les respostes del formulari. Recupera les enviades abans d'activar el trigger; és idempotent (carpetes cercades per nom, noms de fitxer deterministes).
+   - `processResponse(response, config)` → Processa una resposta dins un `LockService.getScriptLock()`, per evitar carpetes duplicades si arriben dues respostes alhora. Si falta un camp de nom o d'unitat, registra un error clar i no la processa.
+   - `checkSetup(config)` → Informa si el trigger està instal·lat i si tots els títols del `config` existeixen al formulari.
+   - Funcions utilitàries (`getResponseByTitle`, `getAnswer`, `cleanName`, `getOrCreateFolder`, `processResponseFiles`, `getFilePath`…). `cleanName` elimina espais sobrants perquè «Maria » i «Maria» comparteixin carpeta.
+   - `installTrigger()` → Instal·la de manera idempotent el trigger *onFormSubmit* i, si el loader defineix `config`, executa `checkSetup()`.
 
 2. **Loader dins cada formulari**
-   - `loadUtils()` → Carrega el codi central des de GitHub.
-   - `onFormSubmit(e)` → Defineix la configuració específica (els camps, els noms de les preguntes) i invoca `handleFormSubmit()`.
-   - `installTriggerForThisForm()` → Posa a disposició dels usuaris no tècnics una funció per instal·lar el trigger simplement fent clic a *Executar*.
+   - `config` → Configuració específica (els camps, els noms de les preguntes).
+   - `getUtilsCode()` → Carrega el codi central des de GitHub.
+   - `onFormSubmit(e)` → Invoca `handleFormSubmit()`. Executada a mà, ordena totes les respostes existents.
+   - `installTriggerForThisForm()` → Posa a disposició dels usuaris no tècnics una funció per instal·lar el trigger i comprovar la configuració simplement fent clic a *Executar*.
+
+   El loader només té aquestes dues funcions perquè les còpies dels formularis ja existents (que no es poden actualitzar) obtinguin les funcionalitats noves sense canviar res: tota la lògica nova entra per `form-utils.js`.
 
 ---
 
@@ -59,7 +65,8 @@ Aquest document descriu l’arquitectura, les decisions de disseny i el flux de 
 - **Centralització** → Tota la lògica complexa és comuna i es troba a GitHub → mantenibilitat i coherència.
 - **Simplicitat per a no tècnics** → Els administradors només han de copiar el loader, editar el bloc `config`, i executar `installTriggerForThisForm` un cop.
 - **Escalabilitat** → És fàcil crear diversos formularis amb configuracions diferents sense duplicar lògica.
-- **Idempotència** → El trigger només s’instal·la si no existeix ja.
+- **Idempotència** → El trigger només s’instal·la si no existeix ja, i tornar a processar respostes no duplica carpetes ni fitxers.
+- **Els triggers no es copien** → En copiar un formulari, Google copia el projecte d'Apps Script però no els triggers instal·lables. Per això cada còpia necessita executar `installTriggerForThisForm` (vegeu la guia ràpida del README).
 
 ---
 
@@ -85,6 +92,12 @@ Per garantir estabilitat i previsibilitat:
   - Els usuaris finals (gestors del formulari) no han de fer res per obtenir millores.
   - Els formularis no es trenquen amb canvis experimentals, ja que només el codi validat es publica a `stable`.
   - Possibilitat de crear tags addicionals per versions anuals o específiques, ex. `stable-2025`, `stable-2026`.
+---
+
+## 🔹 Seguretat
+
+- El codi de `form-utils.js` s'executa amb `eval` amb els permisos del compte que ha activat el trigger, que inclouen accés complet al seu Google Drive.
+- Qualsevol persona que pugui modificar `stable` pot executar codi en aquests comptes. Cal limitar l'accés d'escriptura al repositori i protegir el tag i la branca a GitHub.
 
 ---
 
