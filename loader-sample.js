@@ -12,8 +12,7 @@ const config = {
     'Autorització signada',
     'DNI',
     'Fotografia',
-    'Targeta sanitària',
-    'Llibre de vacunes'
+    'Targeta sanitària'
   ]
 };
 
@@ -28,6 +27,7 @@ function getUtilsCode() {
 
 /**
  * Main submit handler for this form.
+ * Run it manually from the Script Editor to process all existing responses.
  */
 function onFormSubmit(e) {
   eval(getUtilsCode());
@@ -35,7 +35,7 @@ function onFormSubmit(e) {
 }
 
 /**
- * Install trigger easily (run once from Script Editor).
+ * Install trigger and check the config (run once from Script Editor).
  */
 function installTriggerForThisForm() {
   eval(getUtilsCode());
